@@ -49,13 +49,17 @@ def main():
 		logger.info('Skipping device registration and refreshing the access_token')
 		anaplan_oauth.refresh_tokens(uri=f'{oauth_service_uri}/token', database=database, delay=0, rotatable_token=rotatable_token)
 
-	# Configure multithreading 
-	t1_refresh_token = anaplan_oauth.refresh_token_thread(1, name="Refresh Token", delay=5, uri=f'{oauth_service_uri}/token', database=database, rotatable_token=settings["rotatableToken"])
-	t2_get_workspaces = anaplan_ops.get_workspaces_thread(2, name="Get Workspaces", counter=3, delay=10)
+	
+	
+	# Start a tread to refresh the token at intervals specified by the `delay` parameter
+	refresh_token = anaplan_oauth.refresh_token_thread(1, name="Refresh Token", delay=5, uri=f'{oauth_service_uri}/token', database=database, rotatable_token=settings["rotatableToken"])
+	refresh_token.start()
 
+	# Start multiple threads to get workspaces in parallel
 	# Start new Threads
-	t1_refresh_token.start()
-	t2_get_workspaces.start()
+	for i in range(5):
+		get_workspaces = anaplan_ops.get_workspaces_thread(i, name="Get Workspaces", counter=3, delay=10)
+		get_workspaces.start()
 
 	# Exit with return code 0
 	sys.exit(0)
