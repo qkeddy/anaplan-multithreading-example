@@ -53,7 +53,7 @@ def main():
 		anaplan_oauth.refresh_tokens(uri=f'{oauth_service_uri}/token', database=database, delay=0, rotatable_token=rotatable_token)
 
 	# Start a tread to refresh the token at intervals specified by the `delay` parameter
-	refresh_token = anaplan_oauth.refresh_token_thread(1, name="Refresh Token", delay=5, uri=f'{oauth_service_uri}/token', database=database, rotatable_token=settings["rotatableToken"])
+	refresh_token = anaplan_oauth.refresh_token_thread(1, name="Refresh Token", delay=2000, uri=f'{oauth_service_uri}/token', database=database, rotatable_token=settings["rotatableToken"])
 	refresh_token.start()
 
 	# Set File to upload
@@ -64,6 +64,9 @@ def main():
 
 	# Upload files to Anaplan
 	anaplan_ops.upload_all_chunks(file_to_upload=file_to_upload, chunk_files=chunk_files, max_workers=10, base_uri=integration_api_uri, workspace_id=workspace_id, model_id=model_id)  
+
+	print('Process complete. Exiting...')
+	logger.info('Process complete. Exiting...')
 
 	# Exit with return code 0
 	sys.exit(0)

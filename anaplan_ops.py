@@ -21,8 +21,8 @@ def anaplan_api(uri, verb, data=None, body={}, token_type="Bearer "):
     # Set the header based upon the REST API verb    
     if verb == 'PUT':
         get_headers = {
-            'Content-Type': 'application/octet-stream',
-            'Accept': 'application/json',
+            'Content-Type': 'application/x-gzip',
+            'Accept': '*/*',
             'Authorization': token_type + globals.Auth.access_token
         }
     else: 
@@ -85,7 +85,7 @@ def fetch_file_id(**kwargs):
         # Check if the current file's name matches the target file name
         if file['name'] == file_name:
             # If a match is found, return the file's ID
-            return file.get['id']
+            return file['id']
     
     # If no match is found, create a new file and return the ID
     uri = f'{kwargs["base_uri"]}/workspaces/{kwargs["workspace_id"]}/models/{kwargs["model_id"]}/files/{file_name}'
@@ -99,23 +99,26 @@ def fetch_file_id(**kwargs):
 def set_chunk_count(chunk_count, file_id, **kwargs):
     # Set count
     uri = f'{kwargs["base_uri"]}/workspaces/{kwargs["workspace_id"]}/models/{kwargs["model_id"]}/files/{file_id}'
-    print(uri)
     anaplan_api(uri=uri, verb="POST", body={'chunkCount': chunk_count})
 
 
 
-def upload_chunk(file_path, **kwargs):
+def upload_chunk(file_path, file_id, chunk_num, **kwargs):
     """
     Uploads a single chunk to an API.
     """
     # Implement the upload logic here
-    print(f'Uploading {file_path}...')  
+    print(f'Uploading {file_path}...')
 
-    # Simulate upload delay
-    uri = f'{kwargs["base_uri"]}/workspaces/{kwargs["workspace_id"]}/models/{kwargs["model_id"]}/files/{kwargs["file_id"]}'
-    
-    anaplan_api(uri=uri, verb="POST", body={'chunkCount': kwargs["chunk_count"]})
-    print(f'Finished uploading {file_path}.')
+    # Read in file and PUT to endpoint 
+    with open(file_path, 'rb') as file:
+        file_content = file.read()
+
+        # XXXXX
+        uri = f'{kwargs["base_uri"]}/workspaces/{kwargs["workspace_id"]}/models/{kwargs["model_id"]}/files/{file_id}/chunks/{chunk_num}'
+        
+        anaplan_api(uri=uri, verb="PUT", data=file_content)
+        print(f'Finished uploading {file_path}.')
 
 
 
@@ -124,27 +127,26 @@ def upload_all_chunks(**kwargs):
     """
     Uploads all chunks in the specified directory to an API using multiple threads.
     """
-    # chunk_files = [os.path.join(directory_path, f) for f in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, f))]
-
-    # chunk_files = []  # Initialize an empty list to store the file paths
-    # # Iterate over each item in the directory
-    # for f in os.listdir(directory_path):
-    #     full_path = os.path.join(directory_path, f)  # Construct the full path
-    #     # Check if the path is a file, not a directory
-    #     if os.path.isfile(full_path):
-    #         chunk_files.append(full_path)  # Add the path to the list
-    
     # Get File ID
+    file_id = fetch_file_id(**kwargs)
 
     # Set Chunk Count
     chunk_count = len(kwargs["chunk_files"])
-
-    # Set File ID
-    file_id = fetch_file_id(**kwargs)
     set_chunk_count(chunk_count, file_id, **kwargs)
 
     # with ThreadPoolExecutor(max_workers=kwargs["max_workers"]) as executor:
-    #     futures = [executor.submit(upload_chunk, file_path, **kwargs) for file_path in kwargs["chunk_files"]]
+    #     futures = [executor.submit(upload_chunk, file_path, file_id, **kwargs) for file_path in kwargs["chunk_files"]]
     #     for future in futures:
     #         future.result()  # Wait for all uploads to complete
+
+    with ThreadPoolExecutor(max_workers=kwargs["max_workers"]) as executor:
+     
+        # Use enumerate to get the index (chunk_id) and file_path for each file
+        futures = [executor.submit(upload_chunk, file_path, file_id, chunk_id, **kwargs) 
+                for chunk_id, file_path in enumerate(kwargs["chunk_files"])]
+        
+        # Wait for all futures to complete and potentially collect results
+        for future in futures:
+            result = future.result()  # This blocks until the future is completed
+        
 
