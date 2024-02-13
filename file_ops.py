@@ -8,7 +8,11 @@
 import shutil
 import os
 import gzip
+import logging
 
+
+# Enable logger
+logger = logging.getLogger(__name__)
 
 def copy_file_multiple_times(file, count):
     """
@@ -35,7 +39,10 @@ def copy_file_multiple_times(file, count):
 
         # Copy the file
         shutil.copyfile(file, new_file_path)
+        logger.info(f"Copied to: {new_file_path}")
         print(f"Copied to: {new_file_path}")
+
+        # Add the new file path to the list
         created_files.append(new_file_path)
 
     return created_files
@@ -55,13 +62,15 @@ def delete_files(file_paths):
     for file in file_paths:
         try:
             os.remove(file)
+            logger.info(f"Deleted: {file}")
             print(f"Deleted: {file}")
         except OSError as e:
+            logger.error(f"Error: {e.strerror}, while deleting file {file}")
             print(f"Error: {e.strerror}, while deleting file {file}")
 
 
 
-def write_chunked_files(file, chunk_size_mb):
+def write_chunked_files(file, chunk_size_mb=1):
     """
     Write a large file in chunks.
 
@@ -70,7 +79,7 @@ def write_chunked_files(file, chunk_size_mb):
         chunk_size_mb (int): The size of each chunk in megabytes.
 
     Returns:
-        None
+        list: A list of paths of the created chunk files.
     """
     # Approximate number of characters per MB (assuming 1 char = 1 byte)
     chars_per_mb = 1024 * 1024
@@ -116,22 +125,13 @@ def write_chunked_files(file, chunk_size_mb):
                 # Reset the current size for the next chunk
                 current_size = 0
 
+            # Write message
+            logger.info(f"Chunk written to {chunk_file_path}")
             print(f"Chunk written to {chunk_file_path}")
 
     # Write final message
+    logger.info(f"Chunking complete. Total chunks: {chunk_number}")
     print(f"Chunk written to {chunk_file_path}")
    
     # Return the last chunk number as the number of chunks
     return chunk_files
-
-
-# Test the functions
-# created_files = copy_file_multiple_times('./leadRecords5M_50K.csv', 5)
-
-
-# time.sleep(3)
-# delete_files(created_files)
-
-# write_chunked_files('./leadRecords5M.csv', 50)
-# chunk_files = write_chunked_files('./leadRecords5M.csv', 50)
-# print(chunk_files)

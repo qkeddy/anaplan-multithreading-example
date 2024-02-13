@@ -7,9 +7,8 @@
 
 import sys
 import logging
-import os
-
 import utils
+
 import anaplan_oauth
 import globals
 import anaplan_ops
@@ -56,11 +55,13 @@ def main():
 	refresh_token = anaplan_oauth.refresh_token_thread(1, name="Refresh Token", delay=2000, uri=f'{oauth_service_uri}/token', database=database, rotatable_token=settings["rotatableToken"])
 	refresh_token.start()
 
-	# Set File to upload
-	file_to_upload = './leadRecords5M.csv'
+	# Set File to upload and chunk size
+	file_to_upload = args.file
+	chunk_size_mb = args.chunk_size_mb
+	import_data_source = args.import_data_source
 
 	# Chunk files
-	chunk_files = file_ops.write_chunked_files(file=file_to_upload, chunk_size_mb=50)
+	chunk_files = file_ops.write_chunked_files(file=file_to_upload, chunk_size_mb=chunk_size_mb)
 
 	# Upload files to Anaplan
 	anaplan_ops.upload_all_chunks(file_to_upload=file_to_upload, chunk_files=chunk_files, max_workers=10, base_uri=integration_api_uri, workspace_id=workspace_id, model_id=model_id)  
