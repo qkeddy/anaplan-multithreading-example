@@ -70,13 +70,14 @@ def delete_files(file_paths):
 
 
 
-def write_chunked_files(file, chunk_size_mb=1):
+def write_chunked_files(file, chunk_size_mb=1, compression=True):
     """
     Write a large file in chunks.
 
     Args:
         file (str): The path of the file to be written in chunks.
         chunk_size_mb (int): The size of each chunk in megabytes.
+        compression (bool): Flag to toggle GZip compression on or off.
 
     Returns:
         list: A list of paths of the created chunk files.
@@ -98,14 +99,23 @@ def write_chunked_files(file, chunk_size_mb=1):
     with open(file, 'r', encoding='utf-8') as file:
         while True:
             # Create a new file for each chunk
-            chunk_file_name = f"{file_base_name}_chunk_{chunk_number:03d}{file_extension}.gz"
+            if compression:
+                chunk_file_name = f"{file_base_name}_chunk_{chunk_number:03d}{file_extension}.gz"
+            else:
+                chunk_file_name = f"{file_base_name}_chunk_{chunk_number:03d}{file_extension}"
             chunk_file_path = os.path.join(directory, chunk_file_name)
 
             # Add fully qualified file to chunk_files array
             chunk_files.append(chunk_file_path)
 
             # Open the chunk file in gzip format
-            with gzip.open(chunk_file_path, 'wt', encoding='utf-8') as chunk_file:
+            if compression:
+                open_func = gzip.open
+            else:
+                open_func = open
+
+            # Open the chunk file in gzip format
+            with open_func(chunk_file_path, 'wt', encoding='utf-8') as chunk_file:
                 # Read through the file line by line and write to the chunk file
                 for line in file:
                     line_size = len(line.encode('utf-8'))
