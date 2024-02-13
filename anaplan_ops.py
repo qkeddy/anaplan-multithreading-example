@@ -9,15 +9,37 @@
 import logging
 import requests
 from concurrent.futures import ThreadPoolExecutor
-import globals
 import sys
 import os
 import json
+import globals
+
+
+# Enable logger
+logger = logging.getLogger(__name__)
 
 
 # === Interface with Anaplan REST API   ===
 def anaplan_api(uri, verb, data=None, body={}, token_type="Bearer "):
+    """
+    Sends a request to the Anaplan API using the specified URI, HTTP verb, and request data.
 
+    Args:
+        uri (str): The URI of the API endpoint.
+        verb (str): The HTTP verb to use for the request (e.g., 'GET', 'POST', 'PUT', 'DELETE', 'PATCH').
+        data (bytes, optional): The data to send in the request body for 'PUT' requests. Defaults to None.
+        body (dict, optional): The JSON data to send in the request body for 'POST' requests. Defaults to {}.
+        token_type (str, optional): The type of authentication token to include in the request header. Defaults to "Bearer ".
+
+    Returns:
+        requests.Response: The response object returned by the API.
+
+    Raises:
+        requests.exceptions.HTTPError: If the API request returns an HTTP error status code.
+        requests.exceptions.RequestException: If there is an error sending the API request.
+        Exception: If an unexpected error occurs.
+
+    """
     # Set the header based upon the REST API verb    
     if verb == 'PUT':
         get_headers = {
@@ -53,79 +75,176 @@ def anaplan_api(uri, verb, data=None, body={}, token_type="Bearer "):
     except requests.exceptions.HTTPError as err:
         print(
             f'{err} in function "{sys._getframe().f_code.co_name}" with the following details: {err.response.text}')
-        logging.error(
+        logger.error(
             f'{err} in function "{sys._getframe().f_code.co_name}" with the following details: {err.response.text}')
         sys.exit(1)
     except requests.exceptions.RequestException as err:
         print(f'{err} in function "{sys._getframe().f_code.co_name}"')
-        logging.error(f'{err} in function "{sys._getframe().f_code.co_name}"')
+        logger.error(f'{err} in function "{sys._getframe().f_code.co_name}"')
         sys.exit(1)
     except Exception as err:
         print(f'{err} in function "{sys._getframe().f_code.co_name}"')
-        logging.error(f'{err} in function "{sys._getframe().f_code.co_name}"')
+        logger.error(f'{err} in function "{sys._getframe().f_code.co_name}"')
         sys.exit(1)
 
 
+# === Fetch File ID ===
 def fetch_file_id(**kwargs):
+    """
+    Fetches the ID of a file in Anaplan based on the provided parameters.
 
-    # Isolate file name
-    file_name = os.path.basename(kwargs["file_to_upload"])
+    Args:
+        **kwargs: Keyword arguments containing the following parameters:
+            - file_to_upload (str): The path of the file to upload.
+            - base_uri (str): The base URI of the Anaplan API.
+            - workspace_id (str): The ID of the Anaplan workspace.
+            - model_id (str): The ID of the Anaplan model.
 
+    Returns:
+        str: The ID of the file in Anaplan.
+
+    Raises:
+        Exception: If the file is not found and cannot be created.
+
+    """
+    try:
+        # Isolate file name
+        file_name = os.path.basename(kwargs["file_to_upload"])
+        logger.info(f"File name to search for: {file_name}")
+        print(f"File name to search for: {file_name}")
+
+        # Get file ID from existing file in the Anaplan model
+        file_id = get_file_id(**kwargs, file_name)
+        if file_id:
+            logger.info(f"File ID found: {file_id}")
+            print(f"File ID found: {file_id}")
+            # If a match is found, return the ID
+            return file_id
+        else:
+             # If no match is found, create a new file (import data source) and return the ID
+            file_id = create_import_data_source(**kwargs, file_name)
+            logger.info(f"File ID created: {file_id}")
+            print(f"File ID created: {file_id}")
+            return file_id
+
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        print(f"An error occurred: {e}")
+        raise
+
+
+# === Get File ID ===
+def get_file_id(file_name, **kwargs):
+    """
+    Get the ID of a file in Anaplan based on its name.
+
+    Args:
+        file_name (str): The name of the file.
+        **kwargs: Additional keyword arguments containing the base URI, workspace ID, and model ID.
+
+    Returns:
+        str or None: The ID of the file if found, None otherwise.
+    """
     # Get a list of files
     uri = f'{kwargs["base_uri"]}/workspaces/{kwargs["workspace_id"]}/models/{kwargs["model_id"]}/files'
-    res = anaplan_api(uri=uri, verb="GET") 
+    res = anaplan_api(uri=uri, verb="GET")
 
     # Isolate the nested_results
-    nested_results = json.loads(res.text)['files']
-
+    files = json.loads(res.text)['files']
 
     # See if filename matches and ID and return the ID
     # Iterate through each file in the "files" list of the JSON data
-    for file in nested_results:
-        # Check if the current file's name matches the target file name
+    for file in files:
         if file['name'] == file_name:
-            # If a match is found, return the file's ID
             return file['id']
-    
-    # If no match is found, create a new file and return the ID
-    uri = f'{kwargs["base_uri"]}/workspaces/{kwargs["workspace_id"]}/models/{kwargs["model_id"]}/files/{file_name}'
-    res = anaplan_api(uri, verb="POST", body={"chunkCount": 0}) 
+    return None
 
-    # Return the ID of the new file created
+
+# === Create Import Data Source in Anaplan ===
+def create_import_data_source(file_name, **kwargs):
+    """
+    Creates an import data source in Anaplan.
+
+    Args:
+        file_name (str): The name of the file to be created.
+        **kwargs: Additional keyword arguments containing the base URI, workspace ID, and model ID.
+
+    Returns:
+        str: The ID of the created file.
+    """
+    uri = f'{kwargs["base_uri"]}/workspaces/{kwargs["workspace_id"]}/models/{kwargs["model_id"]}/files/{file_name}'
+    res = anaplan_api(uri, verb="POST", body={"chunkCount": 0})
     return json.loads(res.text)['file']['id']
 
 
-
+# === Set Chunk Count ===
 def set_chunk_count(chunk_count, file_id, **kwargs):
+    """
+    Set the chunk count for a file in Anaplan.
+
+    Parameters:
+    - chunk_count (int): The number of chunks to divide the file into.
+    - file_id (str): The ID of the file in Anaplan.
+    - **kwargs: Additional keyword arguments containing the base URI, workspace ID, and model ID.
+
+    Returns:
+    None
+    """
     # Set count
     uri = f'{kwargs["base_uri"]}/workspaces/{kwargs["workspace_id"]}/models/{kwargs["model_id"]}/files/{file_id}'
     anaplan_api(uri=uri, verb="POST", body={'chunkCount': chunk_count})
+    logger.info(f'Chunk count set to {chunk_count} for file ID {file_id}.')
+    print(f'Chunk count set to {chunk_count} for file ID {file_id}.')
 
 
-
+# === Upload Chunk === 
 def upload_chunk(file_path, file_id, chunk_num, **kwargs):
     """
     Uploads a single chunk to an API.
+
+    Parameters:
+    file_path (str): The path of the file to be uploaded.
+    file_id (str): The ID of the file.
+    chunk_num (int): The number of the chunk being uploaded.
+    **kwargs: Additional keyword arguments containing the base URI, workspace ID, and model ID.
+
+    Returns:
+    None
     """
-    # Implement the upload logic here
-    print(f'Uploading {file_path}...')
 
     # Read in file and PUT to endpoint 
     with open(file_path, 'rb') as file:
+
+        # Read in file content
         file_content = file.read()
 
-        # XXXXX
+        logger.info(f'Uploading chunk {chunk_num} of file ID {file_id}.')
+        print(f'Uploading chunk {chunk_num} of file ID {file_id}.')
+        
+        # Set URI
         uri = f'{kwargs["base_uri"]}/workspaces/{kwargs["workspace_id"]}/models/{kwargs["model_id"]}/files/{file_id}/chunks/{chunk_num}'
         
+        # PUT to endpoint
         anaplan_api(uri=uri, verb="PUT", data=file_content)
-        print(f'Finished uploading {file_path}.')
-
 
 
 #def upload_all_chunks(directory_path, max_workers=5, **kwargs):
 def upload_all_chunks(**kwargs):
     """
     Uploads all chunks in the specified directory to an API using multiple threads.
+
+    Parameters:
+    - kwargs (dict): Keyword arguments containing the necessary information for uploading chunks.
+        - chunk_files (list): List of file paths for each chunk.
+        - max_workers (int): Maximum number of worker threads to use.
+        - Other optional arguments specific to the upload process.
+
+    Returns:
+    - None
+
+    Raises:
+    - Any exceptions that occur during the upload process.
+
     """
     # Get File ID
     file_id = fetch_file_id(**kwargs)
@@ -133,11 +252,6 @@ def upload_all_chunks(**kwargs):
     # Set Chunk Count
     chunk_count = len(kwargs["chunk_files"])
     set_chunk_count(chunk_count, file_id, **kwargs)
-
-    # with ThreadPoolExecutor(max_workers=kwargs["max_workers"]) as executor:
-    #     futures = [executor.submit(upload_chunk, file_path, file_id, **kwargs) for file_path in kwargs["chunk_files"]]
-    #     for future in futures:
-    #         future.result()  # Wait for all uploads to complete
 
     with ThreadPoolExecutor(max_workers=kwargs["max_workers"]) as executor:
      
