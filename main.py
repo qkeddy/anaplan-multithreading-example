@@ -56,7 +56,7 @@ def main():
 	refresh_token.start()
 
 	# Set File to upload and chunk size
-	file_to_upload = args.file
+	file_to_upload = args.file_to_upload
 	chunk_size_mb = args.chunk_size_mb
 	import_data_source = args.import_data_source
 

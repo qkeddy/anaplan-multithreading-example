@@ -70,7 +70,7 @@ def delete_files(file_paths):
 
 
 
-def write_chunked_files(file, chunk_size_mb=1, compression=True):
+def write_chunked_files(file, chunk_size_mb, compression=True):
     """
     Write a large file in chunks.
 
@@ -82,6 +82,11 @@ def write_chunked_files(file, chunk_size_mb=1, compression=True):
     Returns:
         list: A list of paths of the created chunk files.
     """
+    # Set default value if None is passed
+    if chunk_size_mb is None:
+        chunk_size_mb = 10
+    
+    print(f'The chunk size is {chunk_size_mb}')
     # Approximate number of characters per MB (assuming 1 char = 1 byte)
     chars_per_mb = 1024 * 1024
 

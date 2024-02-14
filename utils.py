@@ -60,10 +60,10 @@ def read_cli_arguments():
     parser.add_argument('-f', '--file_to_upload', action='store',
                         type=str, help="File to upload to Anaplan")
     parser.add_argument('-i', '--import_data_source', action='store',
-                        type=str, help="File to upload to Anaplan")
-    parser.add_argument('-h', '--chunk_size_mb', action='store',
-                        type=str, help="File chunk size in MB. Max 50MB per chunk. Default is 1MB.")
-    parser.add_argument('-g', '--compress_chunks', action='store',
-                        type=str, help="Flag to compress chunks. Default is True.")
+                        type=str, help="File to upload to Anaplan. Optional. Default is `none`.")
+    parser.add_argument('-s', '--chunk_size_mb', action='store',
+                        type=int, help="File chunk size in MB. Max 50MB per chunk. Default is 1MB.")
+    parser.add_argument('-x', '--compress_chunks', action='store_true',
+                        help="Flag to compress chunks. Default is True.")
     args = parser.parse_args()
     return args

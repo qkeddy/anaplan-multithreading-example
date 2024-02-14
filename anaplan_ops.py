@@ -114,7 +114,7 @@ def fetch_file_id(**kwargs):
         print(f"File name to search for: {file_name}")
 
         # Get file ID from existing file in the Anaplan model
-        file_id = get_file_id(**kwargs, file_name)
+        file_id = get_file_id(file_name, **kwargs)
         if file_id:
             logger.info(f"File ID found: {file_id}")
             print(f"File ID found: {file_id}")
@@ -122,7 +122,7 @@ def fetch_file_id(**kwargs):
             return file_id
         else:
              # If no match is found, create a new file (import data source) and return the ID
-            file_id = create_import_data_source(**kwargs, file_name)
+            file_id = create_import_data_source(file_name, **kwargs)
             logger.info(f"File ID created: {file_id}")
             print(f"File ID created: {file_id}")
             return file_id
@@ -220,7 +220,7 @@ def upload_chunk(file_path, file_id, chunk_num, **kwargs):
 
         logger.info(f'Uploading chunk {chunk_num} of file ID {file_id}.')
         print(f'Uploading chunk {chunk_num} of file ID {file_id}.')
-        
+
         # Set URI
         uri = f'{kwargs["base_uri"]}/workspaces/{kwargs["workspace_id"]}/models/{kwargs["model_id"]}/files/{file_id}/chunks/{chunk_num}'
         
