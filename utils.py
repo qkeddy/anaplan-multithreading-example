@@ -80,5 +80,11 @@ def read_cli_arguments():
                         type=int, help="File chunk size in MB. Max 50MB per chunk. Default is 1MB.")
     parser.add_argument('-n', '--no_compression', action='store_true',
                         help="Flag to turn off compression.")
+
+    # Check if no arguments were passed (only the script name is present)
+    if len(sys.argv) == 1:
+        parser.print_help(sys.stderr)  # Print the help message
+        sys.exit(1)  # Exit the script
+
     args = parser.parse_args()
     return args
