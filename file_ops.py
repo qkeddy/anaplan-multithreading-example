@@ -14,6 +14,7 @@ import logging
 # Enable logger
 logger = logging.getLogger(__name__)
 
+# === Copy files to multiple locations ===
 def copy_file_multiple_times(file, count):
     """
     Copy a file multiple times.
@@ -48,7 +49,7 @@ def copy_file_multiple_times(file, count):
     return created_files
 
 
-
+# === Delete files ===
 def delete_files(file_paths):
     """
     Deletes the files specified by the given file paths.
@@ -69,8 +70,8 @@ def delete_files(file_paths):
             print(f"Error: {e.strerror}, while deleting file {file}")
 
 
-
-def write_chunked_files(file, chunk_size_mb, compression=True):
+# === Write files in chunks ===
+def write_chunked_files(file, chunk_size_mb, no_compression):
     """
     Write a large file in chunks.
 
@@ -104,7 +105,7 @@ def write_chunked_files(file, chunk_size_mb, compression=True):
     with open(file, 'r', encoding='utf-8') as file:
         while True:
             # Create a new file for each chunk
-            if compression:
+            if not no_compression:
                 chunk_file_name = f"{file_base_name}_chunk_{chunk_number:03d}{file_extension}.gz"
             else:
                 chunk_file_name = f"{file_base_name}_chunk_{chunk_number:03d}{file_extension}"
@@ -114,7 +115,7 @@ def write_chunked_files(file, chunk_size_mb, compression=True):
             chunk_files.append(chunk_file_path)
 
             # Open the chunk file in gzip format
-            if compression:
+            if not no_compression:
                 open_func = gzip.open
             else:
                 open_func = open

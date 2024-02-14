@@ -36,6 +36,15 @@ logging.info("************** Logger Started ****************")
 
 # === Read in configuration ===
 def read_configuration_settings():
+    """
+    Reads the configuration settings from the `settings.json` file.
+
+    Returns:
+        dict: A dictionary containing the configuration settings.
+
+    Raises:
+        SystemExit: If the `settings.json` file cannot be opened.
+    """
     try:
         with open("./settings.json", "r") as settings_file:
             settings = json.load(settings_file)
@@ -50,6 +59,12 @@ def read_configuration_settings():
 
 # === Read CLI Arguments ===
 def read_cli_arguments():
+    """
+    Read command line arguments and return the parsed arguments.
+
+    Returns:
+        argparse.Namespace: Parsed command line arguments.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', '--register', action='store_true',
                         help="OAuth device registration")
@@ -60,10 +75,10 @@ def read_cli_arguments():
     parser.add_argument('-f', '--file_to_upload', action='store',
                         type=str, help="File to upload to Anaplan")
     parser.add_argument('-i', '--import_data_source', action='store',
-                        type=str, help="File to upload to Anaplan. Optional. Default is `none`.")
+                        type=str, help="Import data source. Optional. Default is `none`.")
     parser.add_argument('-s', '--chunk_size_mb', action='store',
                         type=int, help="File chunk size in MB. Max 50MB per chunk. Default is 1MB.")
-    parser.add_argument('-x', '--compress_chunks', action='store_true',
-                        help="Flag to compress chunks. Default is True.")
+    parser.add_argument('-n', '--no_compression', action='store_true',
+                        help="Flag to turn off compression.")
     args = parser.parse_args()
     return args

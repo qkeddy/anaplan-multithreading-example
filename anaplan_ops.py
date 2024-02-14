@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 # === Interface with Anaplan REST API   ===
-def anaplan_api(uri, verb, data=None, body={}, token_type="Bearer "):
+def anaplan_api(uri, verb, data=None, body={}, token_type="Bearer ", **kwargs):
     """
     Sends a request to the Anaplan API using the specified URI, HTTP verb, and request data.
 
@@ -40,10 +40,11 @@ def anaplan_api(uri, verb, data=None, body={}, token_type="Bearer "):
         Exception: If an unexpected error occurs.
 
     """
-    # Set the header based upon the REST API verb    
+    # Set the header based upon the REST API verb 
+    # Use 'application/x-gzip' for PUT requests to upload a compressed file or 'application/octet-stream' for an uncompressed file
     if verb == 'PUT':
         get_headers = {
-            'Content-Type': 'application/x-gzip',
+            'Content-Type': 'application/x-gzip' if kwargs.get("no_compression") else 'application/octet-stream',
             'Accept': '*/*',
             'Authorization': token_type + globals.Auth.access_token
         }
@@ -108,8 +109,13 @@ def fetch_file_id(**kwargs):
 
     """
     try:
-        # Isolate file name
-        file_name = os.path.basename(kwargs["file_to_upload"])
+        # If import_data_source is provided then set as file name
+        if kwargs.get("import_data_source"):
+            file_name = kwargs["import_data_source"]
+        else:
+            # Isolate file name
+            file_name = os.path.basename(kwargs["file_to_upload"])
+            
         logger.info(f"File name to search for: {file_name}")
         print(f"File name to search for: {file_name}")
 
@@ -225,7 +231,7 @@ def upload_chunk(file_path, file_id, chunk_num, **kwargs):
         uri = f'{kwargs["base_uri"]}/workspaces/{kwargs["workspace_id"]}/models/{kwargs["model_id"]}/files/{file_id}/chunks/{chunk_num}'
         
         # PUT to endpoint
-        anaplan_api(uri=uri, verb="PUT", data=file_content)
+        anaplan_api(uri=uri, verb="PUT", data=file_content, kwargs=kwargs)
 
 
 #def upload_all_chunks(directory_path, max_workers=5, **kwargs):
