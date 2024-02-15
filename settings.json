@@ -1,11 +1,15 @@
 {
+    "verboseEndpointLogging": false,
     "database": "token.db3",
     "rotatableToken": false,
     "threadCount": 50,
+    "compressUploadChunks": false,
+    "uploadChunkSizeMb": 50,
+    "deleteUploadChunks": true,
     "uris": {
         "oauthService": "https://us1a.app.anaplan.com/oauth",
         "integrationApi": "https://api.anaplan.com/2/0"
-       },
+    },
     "workspaceId": "8a868cd9837162ef0183cd4d7ba842c0",
     "modelId": "295D98F37F1B4682BE7A29035CBFB924"
 }

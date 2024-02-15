@@ -76,11 +76,7 @@ def read_cli_arguments():
                         type=str, help="File to upload to Anaplan")
     parser.add_argument('-i', '--import_data_source', action='store',
                         type=str, help="Import data source. Optional. Default is `none`.")
-    parser.add_argument('-s', '--chunk_size_mb', action='store',
-                        type=int, help="File chunk size in MB. Max 50MB per chunk. Default is 1MB.")
-    parser.add_argument('-n', '--no_compression', action='store_true',
-                        help="Flag to turn off compression.")
-
+    
     # Check if no arguments were passed (only the script name is present)
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)  # Print the help message

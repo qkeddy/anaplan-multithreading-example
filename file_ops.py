@@ -71,7 +71,7 @@ def delete_files(file_paths):
 
 
 # === Write files in chunks ===
-def write_chunked_files(file, chunk_size_mb, no_compression):
+def write_chunked_files(file, chunk_size_mb, compress_upload_chunks):
     """
     Write a large file in chunks.
 
@@ -105,7 +105,7 @@ def write_chunked_files(file, chunk_size_mb, no_compression):
     with open(file, 'r', encoding='utf-8') as file:
         while True:
             # Create a new file for each chunk
-            if not no_compression:
+            if compress_upload_chunks:
                 chunk_file_name = f"{file_base_name}_chunk_{chunk_number:03d}{file_extension}.gz"
             else:
                 chunk_file_name = f"{file_base_name}_chunk_{chunk_number:03d}{file_extension}"
@@ -115,7 +115,7 @@ def write_chunked_files(file, chunk_size_mb, no_compression):
             chunk_files.append(chunk_file_path)
 
             # Open the chunk file in gzip format
-            if not no_compression:
+            if compress_upload_chunks:
                 open_func = gzip.open
             else:
                 open_func = open

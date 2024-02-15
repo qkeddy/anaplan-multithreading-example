@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 # === Interface with Anaplan REST API   ===
-def anaplan_api(uri, verb, data=None, body={}, token_type="Bearer ", no_compression=False):
+def anaplan_api(uri, verb, data=None, body={}, token_type="Bearer ", compress_upload_chunks=True):
     """
     Sends a request to the Anaplan API using the specified URI, HTTP verb, and request data.
 
@@ -42,9 +42,9 @@ def anaplan_api(uri, verb, data=None, body={}, token_type="Bearer ", no_compress
     """
     # Set the header based upon the REST API verb 
     # Use 'application/x-gzip' for PUT requests to upload a compressed file or 'application/octet-stream' for an uncompressed file
-    if verb == 'PUT':
+    if verb == 'PUT':    
         get_headers = {
-            'Content-Type': 'application/octet-stream' if no_compression else 'application/x-gzip',
+            'Content-Type': 'application/x-gzip' if compress_upload_chunks else 'application/octet-stream',
             'Accept': '*/*',
             'Authorization': token_type + globals.Auth.access_token
         }
@@ -231,7 +231,7 @@ def upload_chunk(file_path, file_id, chunk_num, **kwargs):
         uri = f'{kwargs["base_uri"]}/workspaces/{kwargs["workspace_id"]}/models/{kwargs["model_id"]}/files/{file_id}/chunks/{chunk_num}'
         
         # PUT to endpoint
-        anaplan_api(uri=uri, verb="PUT", data=file_content, no_compression=kwargs["no_compression"])
+        anaplan_api(uri=uri, verb="PUT", data=file_content, compress_upload_chunks=kwargs["compress_upload_chunks"])
 
 
 #def upload_all_chunks(directory_path, max_workers=5, **kwargs):
