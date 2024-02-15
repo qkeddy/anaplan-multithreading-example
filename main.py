@@ -33,6 +33,7 @@ def main():
 	delete_upload_chunks = settings["deleteUploadChunks"]
 	database = settings["database"]
 	rotatable_token = settings["rotatableToken"]
+	access_token_ttl = settings["accessTokenTtl"]
 	workspace_id = settings["workspaceId"]
 	model_id = settings["modelId"]
 
@@ -40,11 +41,9 @@ def main():
 	args = utils.read_cli_arguments()
 	register = args.register
 
-	# Set the client_id and token_ttl from the CLI arguments
+	# Set the client_id from the CLI arguments
 	globals.Auth.client_id = args.client_id
-	if args.token_ttl == "":
-		globals.Auth.token_ttl = int(args.token_ttl)
-
+	
 	# If register flag is set, then request the user to authenticate with Anaplan to create device code
 	if register:
 		logger.info(f'Registering the device with Client ID: {globals.Auth.client_id}')
@@ -57,7 +56,7 @@ def main():
 		anaplan_oauth.refresh_tokens(uri=f'{oauth_service_uri}/token', database=database, delay=0, rotatable_token=rotatable_token)
 
 	# Start a tread to refresh the token at intervals specified by the `delay` parameter
-	refresh_token = anaplan_oauth.refresh_token_thread(1, name="Refresh Token", delay=2000, uri=f'{oauth_service_uri}/token', database=database, rotatable_token=settings["rotatableToken"])
+	refresh_token = anaplan_oauth.refresh_token_thread(1, name="Refresh Token", delay=access_token_ttl, uri=f'{oauth_service_uri}/token', database=database, rotatable_token=settings["rotatableToken"])
 	refresh_token.start()
 
 	# Set File to upload and import data source

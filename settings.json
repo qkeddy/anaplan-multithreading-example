@@ -2,9 +2,10 @@
     "verboseEndpointLogging": false,
     "database": "token.db3",
     "rotatableToken": false,
-    "threadCount": 50,
+    "accessTokenTtl": 5,
+    "threadCount": 1,
     "compressUploadChunks": false,
-    "uploadChunkSizeMb": 50,
+    "uploadChunkSizeMb": 10,
     "deleteUploadChunks": true,
     "uris": {
         "oauthService": "https://us1a.app.anaplan.com/oauth",

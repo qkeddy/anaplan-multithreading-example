@@ -70,8 +70,6 @@ def read_cli_arguments():
                         help="OAuth device registration")
     parser.add_argument('-c', '--client_id', action='store',
                         type=str, help="OAuth Client ID")
-    parser.add_argument('-t', '--token_ttl', action='store',
-                        type=str, help="Token time to live value in seconds")
     parser.add_argument('-f', '--file_to_upload', action='store',
                         type=str, help="File to upload to Anaplan")
     parser.add_argument('-i', '--import_data_source', action='store',
