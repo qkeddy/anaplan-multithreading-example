@@ -26,6 +26,7 @@ def main():
 	settings = utils.read_configuration_settings()
 	oauth_service_uri = settings["uris"]["oauthService"]
 	integration_api_uri = settings["uris"]["integrationApi"]
+	thread_count = settings["threadCount"]
 	database = settings["database"]
 	rotatable_token = settings["rotatableToken"]
 	workspace_id = settings["workspaceId"]
@@ -65,7 +66,7 @@ def main():
 	chunk_files = file_ops.write_chunked_files(file=file_to_upload, chunk_size_mb=chunk_size_mb, no_compression=no_compression)
 
 	# Upload files to Anaplan
-	anaplan_ops.upload_all_chunks(file_to_upload=file_to_upload, import_data_source=import_data_source, chunk_files=chunk_files, no_compression=no_compression, max_workers=100, base_uri=integration_api_uri, workspace_id=workspace_id, model_id=model_id)  
+	anaplan_ops.upload_all_chunks(file_to_upload=file_to_upload, import_data_source=import_data_source, chunk_files=chunk_files, no_compression=no_compression, max_workers=thread_count, base_uri=integration_api_uri, workspace_id=workspace_id, model_id=model_id)  
 
 	# Delete temporary files
 	file_ops.delete_files(chunk_files)
