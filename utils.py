@@ -70,10 +70,17 @@ def read_cli_arguments():
                         help="OAuth device registration")
     parser.add_argument('-c', '--client_id', action='store',
                         type=str, help="OAuth Client ID")
+    parser.add_argument('-u', '--user', action='store',
+                        type=str, help='Username for basic authentication')
+    parser.add_argument('-p', '--password', action='store',
+                        type=str, help='Password for basic authentication')
+    parser.add_argument('-k', '--private_key_passphrase', action='store',
+                        type=str, help='Passphrase for private key')
     parser.add_argument('-f', '--file_to_upload', action='store',
                         type=str, help="File to upload to Anaplan")
     parser.add_argument('-i', '--import_data_source', action='store',
                         type=str, help="Import data source. Optional. Default is `none`.")
+
     
     # Check if no arguments were passed (only the script name is present)
     if len(sys.argv) == 1:
