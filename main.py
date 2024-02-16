@@ -72,7 +72,7 @@ def main():
 		elif settings["authenticationMode"] == "cert_auth":
 			print("Using Certificate Authentication")
 			anaplan_auth_api.cert_authentication(
-				uri=authentication_uri, public_cert_path=settings["publicCertPath"], private_key_path=settings["privateKeyPath"], private_key_passphrase=args.private_key_passphrase)
+				uri=f'{authentication_uri}/authenticate', public_cert_path=settings["publicCertPath"], private_key_path=settings["privateKeyPath"], private_key_passphrase=args.private_key_passphrase)
 		else:
 			print("Please update the `settings.json` file with an authentication mode of `basic`, `cert_auth`, or `OAuth`")
 			logging.error(

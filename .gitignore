@@ -136,3 +136,5 @@ workspaces.json
 *.db3
 *.csv
 *.gz
+*.crt
+*.pem
