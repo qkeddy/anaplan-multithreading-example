@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 # === Interface with Anaplan REST API   ===
-def anaplan_api(uri, verb, data=None, body={}, token_type="Bearer ", compress_upload_chunks=True):
+def anaplan_api(uri, verb, data=None, body={}, token_type="Bearer ", compress_upload_chunks=True, verbose_endpoint_logging=False):
     """
     Sends a request to the Anaplan API using the specified URI, HTTP verb, and request data.
 
@@ -40,6 +40,11 @@ def anaplan_api(uri, verb, data=None, body={}, token_type="Bearer ", compress_up
         Exception: If an unexpected error occurs.
 
     """
+    # Log the URI and verb
+    if verbose_endpoint_logging:
+        logger.info(f'Verb: {verb}   URI: {uri}')
+        print(f'Verb: {verb}   URI: {uri}')
+
     # Set the header based upon the REST API verb 
     # Use 'application/x-gzip' for PUT requests to upload a compressed file or 'application/octet-stream' for an uncompressed file
     if verb == 'PUT':    
@@ -153,7 +158,7 @@ def get_file_id(file_name, **kwargs):
     """
     # Get a list of files
     uri = f'{kwargs["base_uri"]}/workspaces/{kwargs["workspace_id"]}/models/{kwargs["model_id"]}/files'
-    res = anaplan_api(uri=uri, verb="GET")
+    res = anaplan_api(uri=uri, verb="GET", verbose_endpoint_logging=kwargs["verbose_endpoint_logging"])
 
     # Isolate the nested_results
     files = json.loads(res.text)['files']
@@ -179,7 +184,7 @@ def create_import_data_source(file_name, **kwargs):
         str: The ID of the created file.
     """
     uri = f'{kwargs["base_uri"]}/workspaces/{kwargs["workspace_id"]}/models/{kwargs["model_id"]}/files/{file_name}'
-    res = anaplan_api(uri, verb="POST", body={"chunkCount": 0})
+    res = anaplan_api(uri, verb="POST", body={"chunkCount": 0}, verbose_endpoint_logging=kwargs["verbose_endpoint_logging"])
     return json.loads(res.text)['file']['id']
 
 
@@ -198,7 +203,7 @@ def set_chunk_count(chunk_count, file_id, **kwargs):
     """
     # Set count
     uri = f'{kwargs["base_uri"]}/workspaces/{kwargs["workspace_id"]}/models/{kwargs["model_id"]}/files/{file_id}'
-    anaplan_api(uri=uri, verb="POST", body={'chunkCount': chunk_count})
+    anaplan_api(uri=uri, verb="POST", body={'chunkCount': chunk_count}, verbose_endpoint_logging=kwargs["verbose_endpoint_logging"])
     logger.info(f'Chunk count set to {chunk_count} for file ID {file_id}.')
     print(f'Chunk count set to {chunk_count} for file ID {file_id}.')
 
@@ -231,7 +236,7 @@ def upload_chunk(file_path, file_id, chunk_num, **kwargs):
         uri = f'{kwargs["base_uri"]}/workspaces/{kwargs["workspace_id"]}/models/{kwargs["model_id"]}/files/{file_id}/chunks/{chunk_num}'
         
         # PUT to endpoint
-        anaplan_api(uri=uri, verb="PUT", data=file_content, compress_upload_chunks=kwargs["compress_upload_chunks"])
+        anaplan_api(uri=uri, verb="PUT", data=file_content, compress_upload_chunks=kwargs["compress_upload_chunks"], verbose_endpoint_logging=kwargs["verbose_endpoint_logging"])
 
 
 #def upload_all_chunks(directory_path, max_workers=5, **kwargs):
