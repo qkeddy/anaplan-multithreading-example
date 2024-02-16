@@ -1,15 +1,15 @@
 # Anaplan Python OAuth Example
 
-![badmath](https://img.shields.io/github/license/qkeddy/anaplan-python-oauth-example)
-![badmath](https://img.shields.io/github/issues/qkeddy/anaplan-python-oauth-example)
-![badmath](https://img.shields.io/github/languages/top/qkeddy/anaplan-python-oauth-example)
-![badmath](https://img.shields.io/github/watchers/qkeddy/anaplan-python-oauth-example)
-![badmath](https://img.shields.io/github/forks/qkeddy/anaplan-python-oauth-example)
+![badmath](https://img.shields.io/github/license/qkeddy/anaplan-multithreading-example)
+![badmath](https://img.shields.io/github/issues/qkeddy/anaplan-multithreading-example)
+![badmath](https://img.shields.io/github/languages/top/qkeddy/anaplan-multithreading-example)
+![badmath](https://img.shields.io/github/watchers/qkeddy/anaplan-multithreading-example)
+![badmath](https://img.shields.io/github/forks/qkeddy/anaplan-multithreading-example)
 
 ## Description
-Demonstrates using the Anaplan REST API with OAuth with device-based authorization. The code highlights how to generate a `device_id`, `access_token`, and `refresh_token`. Additionally, the code highlights a multi-threaded approach to request a new `access_token` while performing other longer running operations such as a large data load. Please note that with this code example, the concept is simulated by calling ***Get Workspaces*** five times every 10 seconds while simultaneously refreshing the `access_token` every 5 seconds. Please note that the `access_token` expires after 35 minutes, so please adjust the timer to a value just below this expiration length (2100 seconds). 
+Demonstrates using the Anaplan REST API with multithreading to speed up the upload of data. The example also demonstrates logging in with basic authentication, S/MIME certificates, as well as device-based OAuth. 
 
-A link to the GitHub repository can be viewed [here](https://github.com/qkeddy/anaplan-python-oauth-example).
+A link to the GitHub repository can be viewed [here](https://github.com/qkeddy/anaplan-multithreading-example).
 
 ## Table of Contents
 
@@ -23,38 +23,47 @@ A link to the GitHub repository can be viewed [here](https://github.com/qkeddy/a
 
 ## Deployment
 1. Fork and clone project repo
-2. Using `pip install`, download and install the following Python libraries
-`sys`, 
-`logging`, 
-`threading`, 
-`requests`,
-`json`,
-`time`,
-`pyjwt`, and
-`apsw`
-3. Create a device authorization code grant (known as a device grant in Anaplan). More information is available [here](https://help.anaplan.com/2ef7b883-fe87-4194-b028-ef6e7bbf8e31-OAuth2-API). 
-
+3. Using `pip install`, download and install the following Python libraries
+`pandas`, `pytz`, `pyjwt`**, `requests`, `pycryptodome` and `apsw`.
+4. Review the `settings.json` file and set the following values: 
+    - Set the Workspace and Model IDs
+    - Set the `"authenticationMode"` to either `basic`, `cert_auth`, or `OAuth` (case-sensitive).
+    - If using `basic`, then use the command line switches `-u` with your Anaplan username and `-p` with the corresponding password. 
+    - If using `cert_auth`, then provide proper paths and the filename of the Public Certificate and the Private Key. If you have a passphrase for your private key, then insert it after the filename separated by a `:`.   Note that both files need to be in a PEM format. Please see the [Interactive Certificate Authority (CA) certificate guide](https://support.anaplan.com/interactive-certificate-authority-ca-certificate-guide-437d0b63-c0be-4650-9711-0d3370593697), if you need to convert your MIME certificates to the required format to support Anaplan Certificate authentication.
+    - If using `OAuth`, set the `"rotatableToken"` key to either `true` or `false` depending on how your `Device Grant OAuth Client` has been configured in the Anaplan Administrative Console. Note this implementation only supports Device Grant OAuth Clients and not Authorization Code Grants. Please create an Anaplan device authorization code grant. More information is available [here](https://help.anaplan.com/2ef7b883-fe87-4194-b028-ef6e7bbf8e31-OAuth2-API). If `"rotatableToken"` is set to `true`, then it is recommended that the `Refresh token lifetime` is set to a longer duration than the default 43,200 seconds. Using the default require an end-user to re-authenticate the device after 12 hours. 
+    - Set the `"accessTokenTtl` time to live to a value less than 2100 seconds. Note that the Anaplan Access Token can have a maximum TTL of 35 minutes (2100 seconds). If there is a desire to see the access token get refreshed more often, then simply set this to a lower value. 
+    - Toggle `"verboseEndpointLogging"` to see the actual REST API URIs 
+    - Control the number of threads (maximum 200) with the `"threadCount"` parameter.
+    - Control if the chunks are compressed in GZip format or plain text with the `"compressUploadChunks"`. This is a good way to see the performance impact of compression.
+    - Control the upload chunk size in megabytes with the `"uploadChunkSizeMb"` parameter. The value must be between 1 and 50.
+    - Control if the upload chunks are deleted when the process is complete with the `"deleteUploadChunks"` parameter. 
 
 
 ## Features
+- Demonstrates accelerated upload performance with multithreading. 
+- Demonstrates chunking at line breaks versus splitting in the middle of a record. 
+- Provides the ability to control number of concurrent threads (maximum 200), chunk size, and toggling compression on & off
 - Dynamically creates a new `access_token` using a `refresh_token` on an independent worker thread.
-- Secure storage of tokens.
+
 
 ## Usage
 
-1. When executing the first time on a particular device, open the CLI in the project folder and run `python3 anaplan.py -r -c <<enter Client ID>>`. 
+1. If using basic authentication, then please start the Python script with the arguments `-u` and `-p` followed by your username and password.
+    - Example: `python .\main.py -u your_user_name -p your_password -f .\myfile_to_upload.csv`
+
+2. When executing the first time and using OAuth on a particular device, open the CLI in the project folder and run `python3 main.py -r -c <<enter Client ID>>`. 
 
 ![image](./anaplan-oauth-token-refresh-new-device-registration.gif)
 
-2. After the above step, the script can be executed unattended by simply executing `python3 anaplan.py`.
+3. After the above step, the script can be executed unattended by simply executing `python3 main.py -f .\myfile_to_upload.csv`.
 
 ![image](./anaplan-oauth-token-refresh-device-registered.gif)
 
-3. To see all command line arguments, start the script with `-h`.
+4. To see all command line arguments, start the script with `-h`.
 
 ![image](./anaplan-oauth-help.gif)
 
-4. To update any of the Anaplan API URLs, please edit the file `settings.json`.
+5. To update any of the Anaplan API URLs, please edit the file `settings.json`.
 
 Note: The `client_id` and `refresh_token` are stored as encrypted values in a SQLite database. As an alternative, a solution like [auth0](https://auth0.com/) would further enhance security. 
 

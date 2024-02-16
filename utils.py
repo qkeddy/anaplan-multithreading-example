@@ -74,8 +74,6 @@ def read_cli_arguments():
                         type=str, help='Username for basic authentication')
     parser.add_argument('-p', '--password', action='store',
                         type=str, help='Password for basic authentication')
-    parser.add_argument('-k', '--private_key_passphrase', action='store',
-                        type=str, help='Passphrase for private key')
     parser.add_argument('-f', '--file_to_upload', action='store',
                         type=str, help="File to upload to Anaplan")
     parser.add_argument('-i', '--import_data_source', action='store',
