@@ -11,6 +11,7 @@ import requests
 from concurrent.futures import ThreadPoolExecutor
 import sys
 import os
+import time
 import json
 import globals
 
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 # === Interface with Anaplan REST API   ===
-def anaplan_api(uri, verb, data=None, body={}, token_type="Bearer ", compress_upload_chunks=True, verbose_endpoint_logging=False):
+def anaplan_api(uri, verb, data=None, body={}, token_type="Bearer ", compress_upload_chunks=True, verbose_endpoint_logging=False, retry_count=3):
     """
     Sends a request to the Anaplan API using the specified URI, HTTP verb, and request data.
 
@@ -61,37 +62,51 @@ def anaplan_api(uri, verb, data=None, body={}, token_type="Bearer ", compress_up
         }
 
     # Select operation based upon the the verb
-    try:
-        match verb:
-            case 'GET':
-                res = requests.get(uri, headers=get_headers)
-            case 'POST':
-                res = requests.post(uri, headers=get_headers, json=body)
-            case 'PUT':
-                res = requests.put(uri, headers=get_headers, data=data)
-            case 'DELETE':
-                res = requests.delete(uri, headers=get_headers)
-            case 'PATCH':
-                res = requests.patch(uri, headers=get_headers)
-        
-        res.raise_for_status()
+    for attempt in range(retry_count + 1):
+        try:
+            match verb:
+                case 'GET':
+                    res = requests.get(uri, headers=get_headers)
+                case 'POST':
+                    res = requests.post(uri, headers=get_headers, json=body)
+                case 'PUT':
+                    res = requests.put(uri, headers=get_headers, data=data)
+                case 'DELETE':
+                    res = requests.delete(uri, headers=get_headers)
+                case 'PATCH':
+                    res = requests.patch(uri, headers=get_headers)
+            
+            res.raise_for_status()
 
-        return res
+            return res
+       
 
-    except requests.exceptions.HTTPError as err:
-        print(
-            f'{err} in function "{sys._getframe().f_code.co_name}" with the following details: {err.response.text}')
-        logger.error(
-            f'{err} in function "{sys._getframe().f_code.co_name}" with the following details: {err.response.text}')
-        sys.exit(1)
-    except requests.exceptions.RequestException as err:
-        print(f'{err} in function "{sys._getframe().f_code.co_name}"')
-        logger.error(f'{err} in function "{sys._getframe().f_code.co_name}"')
-        sys.exit(1)
-    except Exception as err:
-        print(f'{err} in function "{sys._getframe().f_code.co_name}"')
-        logger.error(f'{err} in function "{sys._getframe().f_code.co_name}"')
-        sys.exit(1)
+        except requests.exceptions.HTTPError as err:
+            # Handle HTTPError specifically
+            if attempt < retry_count:
+                print(f'Retry {attempt + 1}/{retry_count} after HTTP error: {err}')
+                logger.info(f'Retry {attempt + 1}/{retry_count} after HTTP error: {err}')
+                time.sleep(2)  # Exponential backoff
+            else:
+                print(f'HTTP error in function "{sys._getframe().f_code.co_name}" after {retry_count} retries: {err}')
+                logger.error(f'HTTP error in function "{sys._getframe().f_code.co_name}" after {retry_count} retries: {err}')
+                sys.exit(1)  # Kills the existing thread and raises the last HTTPError after all retries have failed
+
+        except requests.exceptions.RequestException as err:
+            # Handle other request exceptions
+            if attempt < retry_count:
+                print(f'Retry {attempt + 1}/{retry_count} after Non-HTTP request error: {err}')
+                logger.info(f'Retry {attempt + 1}/{retry_count} after Non-HTTP request error: {err}')
+                time.sleep(2)  # Exponential backoff
+            else:
+                print(f'Non-HTTP request error in function "{sys._getframe().f_code.co_name}" after {retry_count} retries: {err}')
+                logger.error(f'HTTP request error in function "{sys._getframe().f_code.co_name}" after {retry_count} retries: {err}')
+                sys.exit(1)  # Kills the existing thread and raises the last Non-HTTPError after all retries have failed
+
+        except Exception as err:
+            print(f'Unexpected error in function "{sys._getframe().f_code.co_name}": {err}')
+            logger.error(f'Unexpected error in function "{sys._getframe().f_code.co_name}": {err}')
+            sys.exit(1)  # Kills the existing thread and raises an exception after all retries have failed
 
 
 # === Fetch File ID ===
@@ -158,7 +173,7 @@ def get_file_id(file_name, **kwargs):
     """
     # Get a list of files
     uri = f'{kwargs["base_uri"]}/workspaces/{kwargs["workspace_id"]}/models/{kwargs["model_id"]}/files'
-    res = anaplan_api(uri=uri, verb="GET", verbose_endpoint_logging=kwargs["verbose_endpoint_logging"])
+    res = anaplan_api(uri=uri, verb="GET", verbose_endpoint_logging=kwargs["verbose_endpoint_logging"], retry_count=kwargs["retry_count"])
 
     # Isolate the nested_results
     files = json.loads(res.text)['files']
@@ -184,7 +199,7 @@ def create_import_data_source(file_name, **kwargs):
         str: The ID of the created file.
     """
     uri = f'{kwargs["base_uri"]}/workspaces/{kwargs["workspace_id"]}/models/{kwargs["model_id"]}/files/{file_name}'
-    res = anaplan_api(uri, verb="POST", body={"chunkCount": 0}, verbose_endpoint_logging=kwargs["verbose_endpoint_logging"])
+    res = anaplan_api(uri, verb="POST", body={"chunkCount": 0}, verbose_endpoint_logging=kwargs["verbose_endpoint_logging"], retry_count=kwargs["retry_count"])
     return json.loads(res.text)['file']['id']
 
 
@@ -203,7 +218,7 @@ def set_chunk_count(chunk_count, file_id, **kwargs):
     """
     # Set count
     uri = f'{kwargs["base_uri"]}/workspaces/{kwargs["workspace_id"]}/models/{kwargs["model_id"]}/files/{file_id}'
-    anaplan_api(uri=uri, verb="POST", body={'chunkCount': chunk_count}, verbose_endpoint_logging=kwargs["verbose_endpoint_logging"])
+    anaplan_api(uri=uri, verb="POST", body={'chunkCount': chunk_count}, verbose_endpoint_logging=kwargs["verbose_endpoint_logging"], retry_count=kwargs["retry_count"])
     logger.info(f'Chunk count set to {chunk_count} for file ID {file_id}.')
     print(f'Chunk count set to {chunk_count} for file ID {file_id}.')
 
@@ -236,7 +251,7 @@ def upload_chunk(file_path, file_id, chunk_num, **kwargs):
         uri = f'{kwargs["base_uri"]}/workspaces/{kwargs["workspace_id"]}/models/{kwargs["model_id"]}/files/{file_id}/chunks/{chunk_num}'
         
         # PUT to endpoint
-        anaplan_api(uri=uri, verb="PUT", data=file_content, compress_upload_chunks=kwargs["compress_upload_chunks"], verbose_endpoint_logging=kwargs["verbose_endpoint_logging"])
+        anaplan_api(uri=uri, verb="PUT", data=file_content, compress_upload_chunks=kwargs["compress_upload_chunks"], verbose_endpoint_logging=kwargs["verbose_endpoint_logging"], retry_count=kwargs["retry_count"])
 
 
 #def upload_all_chunks(directory_path, max_workers=5, **kwargs):

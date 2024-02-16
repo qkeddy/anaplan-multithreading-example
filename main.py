@@ -25,6 +25,7 @@ def main():
 	# Get configurations & set variables
 	settings = utils.read_configuration_settings()
 	verbose_endpoint_logging = settings["verboseEndpointLogging"]
+	retry_count = settings["retryCount"]
 	authentication_uri = settings["uris"]["authenticationApi"]
 	oauth_service_uri = settings["uris"]["oauthService"]
 	integration_api_uri = settings["uris"]["integrationApi"]
@@ -96,7 +97,7 @@ def main():
 	chunk_files = file_ops.write_chunked_files(file=file_to_upload, chunk_size_mb=upload_chunk_size_mb, compress_upload_chunks=compress_upload_chunks)
 
 	# Upload files to Anaplan
-	anaplan_ops.upload_all_chunks(file_to_upload=file_to_upload, import_data_source=import_data_source, chunk_files=chunk_files, compress_upload_chunks=compress_upload_chunks, max_workers=thread_count, verbose_endpoint_logging=verbose_endpoint_logging, base_uri=integration_api_uri, workspace_id=workspace_id, model_id=model_id)  
+	anaplan_ops.upload_all_chunks(file_to_upload=file_to_upload, import_data_source=import_data_source, chunk_files=chunk_files, compress_upload_chunks=compress_upload_chunks, max_workers=thread_count, verbose_endpoint_logging=verbose_endpoint_logging, retry_count=retry_count, base_uri=integration_api_uri, workspace_id=workspace_id, model_id=model_id)  
 
 	# Delete temporary files
 	if delete_upload_chunks:

@@ -12,6 +12,7 @@
     "compressUploadChunks": true,
     "uploadChunkSizeMb": 10,
     "deleteUploadChunks": true,
+    "retryCount": 3,
     "uris": {
         "authenticationApi": "https://auth.anaplan.com/token",
         "oauthService": "https://us1a.app.anaplan.com/oauth",
