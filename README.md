@@ -1,4 +1,4 @@
-# Anaplan Python OAuth Example
+# Anaplan REST API Multithreading Python Example
 
 ![badmath](https://img.shields.io/github/license/qkeddy/anaplan-multithreading-example)
 ![badmath](https://img.shields.io/github/issues/qkeddy/anaplan-multithreading-example)
@@ -24,7 +24,7 @@ A link to the GitHub repository can be viewed [here](https://github.com/qkeddy/a
 ## Deployment
 1. Fork and clone project repo
 3. Using `pip install`, download and install the following Python libraries
-`pandas`, `pytz`, `pyjwt`**, `requests`, `pycryptodome` and `apsw`.
+`pandas`, `pytz`, `pyjwt`, `requests`, `pycryptodome` and `apsw`.
 4. Review the `settings.json` file and set the following values: 
     - Set the Workspace and Model IDs
     - Set the `"authenticationMode"` to either `basic`, `cert_auth`, or `OAuth` (case-sensitive).
