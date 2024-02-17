@@ -8,6 +8,7 @@
 import sys
 import logging
 import utils
+import time
 import anaplan_auth_api
 import anaplan_oauth
 import globals
@@ -15,6 +16,8 @@ import anaplan_ops
 import file_ops
 
 def main():
+
+	start_time = time.time()  # Record the start time
 	
 	# Clear the console
 	utils.clear_console()
@@ -105,6 +108,10 @@ def main():
 
 	print('Process complete. Exiting...')
 	logger.info('Process complete. Exiting...')
+	
+	end_time = time.time()  # Record the end time
+	processing_time = end_time - start_time  # Calculate the processing time
+	print(f"Total processing time: {processing_time:.2f} seconds.")  # Print the processing time
 
 	# Exit with return code 0
 	sys.exit(0)
