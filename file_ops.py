@@ -9,6 +9,7 @@ import shutil
 import os
 import gzip
 import logging
+import sys
 
 
 # Enable logger
@@ -101,49 +102,54 @@ def write_chunked_files(file, chunk_size_mb, compress_upload_chunks):
     chunk_number = 1
     chunk_files = []  # Initialize an empty list to store the file paths
 
-    # Open the input file
-    with open(file, 'r', encoding='utf-8') as file:
-        while True:
-            # Create a new file for each chunk
-            if compress_upload_chunks:
-                chunk_file_name = f"{file_base_name}_chunk_{chunk_number:03d}{file_extension}.gz"
-            else:
-                chunk_file_name = f"{file_base_name}_chunk_{chunk_number:03d}{file_extension}"
-            chunk_file_path = os.path.join(directory, chunk_file_name)
+    try:
+        # Open the input file
+        with open(file, 'r', encoding='utf-8') as file:
+            while True:
+                # Create a new file for each chunk
+                if compress_upload_chunks:
+                    chunk_file_name = f"{file_base_name}_chunk_{chunk_number:03d}{file_extension}.gz"
+                else:
+                    chunk_file_name = f"{file_base_name}_chunk_{chunk_number:03d}{file_extension}"
+                chunk_file_path = os.path.join(directory, chunk_file_name)
 
-            # Add fully qualified file to chunk_files array
-            chunk_files.append(chunk_file_path)
+                # Add fully qualified file to chunk_files array
+                chunk_files.append(chunk_file_path)
 
-            # Open the chunk file in gzip format
-            if compress_upload_chunks:
-                open_func = gzip.open
-            else:
-                open_func = open
+                # Open the chunk file in gzip format
+                if compress_upload_chunks:
+                    open_func = gzip.open
+                else:
+                    open_func = open
 
-            # Open the chunk file in gzip format
-            with open_func(chunk_file_path, 'wt', encoding='utf-8') as chunk_file:
-                # Read through the file line by line and write to the chunk file
-                for line in file:
-                    line_size = len(line.encode('utf-8'))
-                    
-                    # Check if adding this line would exceed the size limit
-                    if current_size + line_size > max_size:
-                        chunk_number += 1
+                # Open the chunk file in gzip format
+                with open_func(chunk_file_path, 'wt', encoding='utf-8') as chunk_file:
+                    # Read through the file line by line and write to the chunk file
+                    for line in file:
+                        line_size = len(line.encode('utf-8'))
+                        
+                        # Check if adding this line would exceed the size limit
+                        if current_size + line_size > max_size:
+                            chunk_number += 1
+                            break
+
+                        # Write the line to the chunk file
+                        chunk_file.write(line)
+                        current_size += line_size
+                    else:
+                        # End of file reached
                         break
 
-                    # Write the line to the chunk file
-                    chunk_file.write(line)
-                    current_size += line_size
-                else:
-                    # End of file reached
-                    break
+                    # Reset the current size for the next chunk
+                    current_size = 0
 
-                # Reset the current size for the next chunk
-                current_size = 0
-
-            # Write message
-            logger.info(f"Chunk written to {chunk_file_path}")
-            print(f"Chunk written to {chunk_file_path}")
+                # Write message
+                logger.info(f"Chunk written to {chunk_file_path}")
+                print(f"Chunk written to {chunk_file_path}")
+    except FileNotFoundError:
+        logger.error(f"File not found: {file}")
+        print(f"Error: The file {file} does not exist.")
+        sys.exit(1)        
 
     # Write final message
     logger.info(f"Chunking complete. Total chunks: {chunk_number}")
