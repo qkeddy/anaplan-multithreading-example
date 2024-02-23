@@ -59,8 +59,8 @@ def main():
 			anaplan_oauth.get_device_id(uri=f'{oauth_service_uri}/device/code')
 			anaplan_oauth.get_tokens(uri=f'{oauth_service_uri}/token', database=database)
 
-			logger.info(f"** Device has been successfully registered **")  # Print the processing time
-			print(f"\n** Device has been successfully registered **\n")  # Print the processing time
+			logger.info(f"** Device has been successfully registered **")  
+			print(f"\n** Device has been successfully registered **\n")  
 
 			# Exit with return code 0 after device registration
 			sys.exit(0)
