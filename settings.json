@@ -1,7 +1,7 @@
 {
     "workspaceId": "8a868cd9837162ef0183cd4d7ba842c0",
     "modelId": "295D98F37F1B4682BE7A29035CBFB924",
-    "authenticationMode": "basic",
+    "authenticationMode": "OAuth",
     "publicCertPath": "./cert_quin_eddy_public.crt",
     "privateKeyPath": "./quin_eddy_private-key.pem:",
     "rotatableToken": false,

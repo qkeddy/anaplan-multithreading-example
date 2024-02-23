@@ -111,6 +111,7 @@ def main():
 	
 	end_time = time.time()  # Record the end time
 	processing_time = end_time - start_time  # Calculate the processing time
+	logger.info(f"Total processing time: {processing_time:.2f} seconds.")  # Print the processing time
 	print(f"Total processing time: {processing_time:.2f} seconds.")  # Print the processing time
 
 	# Exit with return code 0
