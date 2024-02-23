@@ -48,26 +48,29 @@ A link to the GitHub repository can be viewed [here](https://github.com/qkeddy/a
 
 ## Usage
 
-1. If using basic authentication, then please start the Python script with the arguments `-u` and `-p` followed by your username and password.
-    - Example: `python .\main.py -u your_user_name -p your_password -f .\myfile_to_upload.csv`. Note that the example below is using OAuth, so a username and password is not requried.
-
-![image](./anaplan-multi-threading-run-example.gif)
-
-2. When executing the first time and using OAuth on a particular device, open the CLI in the project folder and run `python3 main.py -r -c <<enter Client ID>>`. 
-
-![image](./anaplan-multi-threading-device-registration.gif)
-
-3. After the above step, the script can be executed unattended by simply executing `python3 main.py -f .\myfile_to_upload.csv`.
+1. When executing the first time and using OAuth on a particular device, open the CLI in the project folder and run `python3 main.py -r -c <<enter Client ID>>`. 
 
 ![image](./anaplan-multi-threading-device-register.gif)
 
 Note: The `client_id` and `refresh_token` are stored as encrypted values in a SQLite database. As an alternative, a solution like [auth0](https://auth0.com/) would further enhance security. 
 
-4. To see all command line arguments, start the script with `-h`.
+
+2. After the above step, the script can be executed unattended by simply executing `python3 main.py -f .\myfile_to_upload.csv`.
+
+![image](./anaplan-multi-threading-run-example.gif)
+
+Note: If using basic authentication, then please start the Python script with the arguments `-u` and `-p` followed by your username and password.
+- Example: `python .\main.py -u your_user_name -p your_password -f .\myfile_to_upload.csv`. 
+
+Note: If using certificate authentication, then simply start the Python script as follows.
+- Example: `python .\main.py -f .\myfile_to_upload.csv`. 
+
+
+3. To see all command line arguments, start the script with `-h`.
 
 ![image](./anaplan-multi-threading-help.gif)
 
-5. To update any of the Anaplan API URLs, please edit the file `settings.json`.
+4. To update any of the Anaplan API URLs, please edit the file `settings.json`.
 
 
 ## Tests
