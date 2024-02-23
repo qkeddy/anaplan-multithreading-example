@@ -58,7 +58,10 @@ def main():
 			logger.info(f'Registering the device with Client ID: {globals.Auth.client_id}')
 			anaplan_oauth.get_device_id(uri=f'{oauth_service_uri}/device/code')
 			anaplan_oauth.get_tokens(uri=f'{oauth_service_uri}/token', database=database)
-			
+
+			logger.info(f"** Device has been successfully registered **")  # Print the processing time
+			print(f"** Device has been successfully registered **")  # Print the processing time
+
 			# Exit with return code 0 after device registration
 			sys.exit(0)
 		else:
