@@ -59,6 +59,8 @@ def main():
 			anaplan_oauth.get_device_id(uri=f'{oauth_service_uri}/device/code')
 			anaplan_oauth.get_tokens(uri=f'{oauth_service_uri}/token', database=database)
 			
+			# Exit with return code 0 after device registration
+			sys.exit(0)
 		else:
 			print('Skipping device registration and refreshing the access_token')
 			logger.info('Skipping device registration and refreshing the access_token')
@@ -90,7 +92,7 @@ def main():
 			delay=access_token_ttl,
 			uri=f'{authentication_uri}/refresh'
 		)
-		refresh_token.start()		
+		refresh_token.start()
 
 	# Set File to upload and import data source
 	file_to_upload = args.file_to_upload
